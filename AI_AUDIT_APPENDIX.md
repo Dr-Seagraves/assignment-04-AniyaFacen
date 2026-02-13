@@ -2,21 +2,21 @@
 
 ## Tool(s) Used
 - [Tool name + version] (e.g., ChatGPT, Claude, GitHub Copilot)
-- If none, write: **"No AI tools were used for this assignment."**
+- If none, write: **"No AI tools were used for this assignment."** Github Copilots
 
 ## Task(s) Where AI Was Used
-- [Specific task] (e.g., "Statsmodels OLS formula for ret ~ div12m_me")
+- [Specific task] (to create scatterplots and run regression samples) 
 
 ## Prompt(s)
-- [Exact prompt text]
+- [Create scatter plot with the fitted regression line] 
 
 ## Output Summary
-- [What the AI suggested or generated]
+- [Creatted 3 different scatter plots and regrssion samples]
 
 ## Verification & Modifications (Disclose • Verify • Critique)
-- **Verify:** How you checked the output (e.g., ran the script, spot-checked regression table)
-- **Critique:** What was wrong/incomplete and why
-- **Modify:** What you changed in your final work
+- **Verify:** How you checked the output (Ran the script)
+- **Critique:** nothing
+- **Modify:** I changed the missing values
 
 ## If No AI Tools Used
 Write: "No AI tools were used for this assignment."

@@ -99,8 +99,6 @@ def load_reit_annual_data(data_path: Path) -> pd.DataFrame:
 
     df = _merge_annual_interest_rates(df, data_path.parent)
 
-    # TODO: Drop rows with missing values in ret, div12m_me, prime_rate
-    # Hint: df = df.dropna(subset=["ret", "div12m_me", "prime_rate"])
     df = df.dropna(subset=["ret", "div12m_me", "prime_rate"])
 
     return df
@@ -122,10 +120,8 @@ def estimate_regression(df: pd.DataFrame, x_var: str):
     statsmodels.regression.linear_model.RegressionResultsWrapper
         Fitted regression model.
     """
-    # TODO: Use statsmodels.formula.api.ols to estimate ret ~ x_var
-    # Hint: model = ols(f"ret ~ {x_var}", data=df).fit()
-    # return model
-    raise NotImplementedError("Implement the regression estimation here")
+    model = ols(f"ret ~ {x_var}", data=df).fit()
+    return model
 
 
 def save_regression_summary(model, output_path: Path) -> None:
@@ -133,9 +129,8 @@ def save_regression_summary(model, output_path: Path) -> None:
     Save the regression summary to a text file.
     """
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    # TODO: Write str(model.summary()) to the output file
     with open(output_path, "w") as f:
-        pass  # TODO
+        f.write(str(model.summary()))
 
 
 def plot_scatter_with_regression(
@@ -151,14 +146,30 @@ def plot_scatter_with_regression(
     - Zoom axis limits to central data (e.g., 2nd–98th percentiles) so the slope is easier to see
     """
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    # TODO: Create fig, ax with plt.subplots(figsize=(10, 6))
-    # TODO: Filter to rows with valid x_var and ret
-    # TODO: Scatter plot
-    # TODO: Overlay regression line (use model.params['Intercept'] and model.params[x_var])
-    # TODO: Set axis limits to zoom on central data (e.g., percentiles 2–98)
-    # TODO: Add title (include R²), xlabel, ylabel="Annual Return", legend
-    # TODO: Save with plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    pass  # TODO
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    plot_df = df[[x_var, "ret"]].dropna()
+    ax.scatter(plot_df[x_var], plot_df["ret"], alpha=0.35, label="Data")
+
+    intercept = model.params.get("Intercept", 0.0)
+    slope = model.params.get(x_var, 0.0)
+    x_min, x_max = np.nanpercentile(plot_df[x_var], [2, 98])
+    x_vals = np.linspace(x_min, x_max, 200)
+    y_vals = intercept + slope * x_vals
+    ax.plot(x_vals, y_vals, color="black", linewidth=2, label="OLS fit")
+
+    y_min, y_max = np.nanpercentile(plot_df["ret"], [2, 98])
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+
+    ax.set_title(f"{title} (R^2={model.rsquared:.3f})")
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel("Annual Return")
+    ax.legend()
+
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.show()
+    plt.close(fig)
 
 
 def print_key_results(model, x_var: str) -> None:
@@ -168,9 +179,28 @@ def print_key_results(model, x_var: str) -> None:
     print("\n" + "=" * 60)
     print(f"ret (annual) ~ {x_var.upper()}")
     print("=" * 60)
-    # TODO: Print intercept (β₀), slope (β₁), standard errors, t-stats, p-values
-    # TODO: Print R², Adj R², N
-    # TODO: Print whether slope is positive/negative and significant at 5%
+    intercept = model.params.get("Intercept", float("nan"))
+    slope = model.params.get(x_var, float("nan"))
+    intercept_se = model.bse.get("Intercept", float("nan"))
+    slope_se = model.bse.get(x_var, float("nan"))
+    intercept_t = model.tvalues.get("Intercept", float("nan"))
+    slope_t = model.tvalues.get(x_var, float("nan"))
+    intercept_p = model.pvalues.get("Intercept", float("nan"))
+    slope_p = model.pvalues.get(x_var, float("nan"))
+
+    print("Intercept: {0:.6f} (SE {1:.6f}, t {2:.3f}, p {3:.4f})".format(
+        intercept, intercept_se, intercept_t, intercept_p
+    ))
+    print("Slope ({0}): {1:.6f} (SE {2:.6f}, t {3:.3f}, p {4:.4f})".format(
+        x_var, slope, slope_se, slope_t, slope_p
+    ))
+    print("R^2: {0:.4f} | Adj R^2: {1:.4f} | N: {2:.0f}".format(
+        model.rsquared, model.rsquared_adj, model.nobs
+    ))
+
+    direction = "positive" if slope >= 0 else "negative"
+    significant = "significant" if slope_p < 0.05 else "not significant"
+    print(f"Slope is {direction} and {significant} at 5%.")
     print("=" * 60 + "\n")
 
 
